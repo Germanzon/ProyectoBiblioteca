@@ -25,7 +25,7 @@ public class DAOLibros extends DBConexion {
     public static void Actualizar(Libros reg) throws Exception {
         Connection con = GetConexion();
         String Select = "UPDATE Libros SET Titulo = ?, Autor = ?," +
-                "Anio_publicacion = ?, Disponibilidad = ? where id_Libro = ?";
+                "Anio_publicacion = ?, Disponibilidad = ? where ID_Libros = ?";
         PreparedStatement ps = con.prepareStatement(Select);
         ps.setString(1, reg.getTitulo());
         ps.setString(2, reg.getAutor());
@@ -40,7 +40,7 @@ public class DAOLibros extends DBConexion {
     //Eliminar usuarios
     public static void Eliminar(int id_Libro) throws Exception {
         Connection con = GetConexion();
-        String select = "DELETE FROM Libros WHERE id_Libro = ?";
+        String select = "DELETE FROM Libros WHERE ID_Libros = ?";
         PreparedStatement ps = con.prepareStatement(select);
         ps.setInt(1, id_Libro);
         ps.executeUpdate();

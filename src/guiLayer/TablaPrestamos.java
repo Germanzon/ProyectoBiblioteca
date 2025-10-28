@@ -181,13 +181,8 @@ public class TablaPrestamos extends JPanel {
     private void crearNuevoPrestamo(JComboBox<String> comboBoxUsuarios, JComboBox<String> comboBoxLibros, JDialog dialogo) {
         String usuarioSeleccionado = (String)comboBoxUsuarios.getSelectedItem();
         String libroSeleccionado = (String)comboBoxLibros.getSelectedItem();
-        int dias = 15;
-        LocalDate fechaPrestamo = LocalDate.now();
-        LocalDate fechaDevolucion = fechaPrestamo.plusDays((long)dias);
-        DateTimeFormatter formato = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        int idPrestamo = this.modeloTabla.getRowCount() + 1;
-        this.modeloTabla.addRow(new Object[]{idPrestamo, usuarioSeleccionado, libroSeleccionado, fechaPrestamo.format(formato), fechaDevolucion.format(formato), "En Préstamo"});
-        this.InsercionDatos(idPrestamo, usuarioSeleccionado, libroSeleccionado, fechaPrestamo.format(formato), fechaDevolucion.format(formato), "En Préstamo" );
+
+        this.InsercionDatos(usuarioSeleccionado, libroSeleccionado );
         this.libroNoDisponible(libroSeleccionado);
         JOptionPane.showMessageDialog(this, "Préstamo: " + idPrestamo + "\nUsuario: " + usuarioSeleccionado + "\nLibro: " + libroSeleccionado + "\nFecha Devolución: " + fechaDevolucion.format(formato) + "\nRegistrado exitosamente.");
         dialogo.dispose();
@@ -282,7 +277,7 @@ public class TablaPrestamos extends JPanel {
             conn.close();
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this,
-                    "Error al cargar usuarios desde la base de datos: " + ex.getMessage(),
+                    "Error al cargar prestamos desde la base de datos: " + ex.getMessage(),
                     "Error de Conexion",
                     JOptionPane.ERROR_MESSAGE);
             ex.printStackTrace();

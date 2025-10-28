@@ -23,7 +23,7 @@ public class DAOUsuarios extends DBConexion{
     //Actualizar un usuario
     public static void Actualizar(Usuarios reg) throws Exception {
         Connection con = GetConexion();
-        String Select = "UPDATE Usuarios SET Nombre = ?, Apellido = ?," + "Correo = ?, Telefono = ? where ID = ?";
+        String Select = "UPDATE Usuarios SET Nombre = ?, Apellido = ?," + "Correo = ?, Telefono = ? where ID_Usuario = ?";
         PreparedStatement ps = con.prepareStatement(Select);
         ps.setString(1, reg.getNombre());
         ps.setString(2, reg.getApellido());
@@ -38,7 +38,7 @@ public class DAOUsuarios extends DBConexion{
     //Eliminar usuarios
     public static void Eliminar(int id_Usuario) throws Exception {
         Connection con = GetConexion();
-        String select = "DELETE FROM Usuarios WHERE ID = ?";
+        String select = "DELETE FROM Usuarios WHERE ID_Usuario = ?";
         PreparedStatement ps = con.prepareStatement(select);
         ps.setInt(1, id_Usuario);
         ps.executeUpdate();

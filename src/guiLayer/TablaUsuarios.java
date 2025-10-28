@@ -278,7 +278,7 @@ public class TablaUsuarios extends JPanel {
                     String telefono = txtTelefono.getText();
 
                     if (TablaUsuarios.this.Validaciones(dialog, txtNombre, txtApellido, txtCorreo, txtTelefono, nombre, apellido, correo, telefono, 0)) {
-                        TablaUsuarios.this.InsercionDatos(id, nombre, apellido, correo, telefono);
+                        TablaUsuarios.this.InsercionDatos(nombre, apellido, correo, telefono);
                         dialog.dispose();
                     }
                 }
@@ -344,11 +344,10 @@ public class TablaUsuarios extends JPanel {
             }
         }
 
-        public void InsercionDatos (int id, String nombre, String apellido, String correo, String telefono){
+        public void InsercionDatos (String nombre, String apellido, String correo, String telefono){
             try {
                 //Crear objeto Usuario
                 Usuarios usuario = new Usuarios();
-                usuario.setId_Usuario(id);
                 usuario.setNombre(nombre);
                 usuario.setApellido(apellido);
                 usuario.setCorreo(correo);
@@ -359,7 +358,7 @@ public class TablaUsuarios extends JPanel {
 
                 this.cargarUsuariosDesdeDb();
 
-                JOptionPane.showMessageDialog(this,"ID: " + id + "\nUsuario: " + nombre + " " + apellido + "\nCorreo: " + correo + "\nTelefono: " + telefono + "\nregistrado exitosamente.");
+                JOptionPane.showMessageDialog(this,"\nUsuario: " + nombre + " " + apellido + "\nCorreo: " + correo + "\nTelefono: " + telefono + "\nregistrado exitosamente.");
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this,
                         "Error al guardar usuario: " + ex.getMessage(),
@@ -404,11 +403,11 @@ public class TablaUsuarios extends JPanel {
             try {
                 Connection conn = DBConexion.GetConexion();
                 Statement stmt = conn.createStatement();
-                ResultSet rs = stmt.executeQuery("SELECT ID, nombre, apellido, correo, telefono FROM Usuarios");
+                ResultSet rs = stmt.executeQuery("SELECT ID_Usuario, nombre, apellido, correo, telefono FROM Usuarios");
 
                 // Cargar los datos en la tabla
                 while (rs.next()) {
-                    int id = rs.getInt("ID");
+                    int id = rs.getInt("ID_Usuario");
                     String nombre = rs.getString("Nombre");
                     String apellido = rs.getString("Apellido");
                     String correo = rs.getString("correo");
