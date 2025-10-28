@@ -3,13 +3,13 @@ package dataLayer;
 public class Usuarios {
 
     private int id_Usuario;
-    private String nombre, apellido, email, telefono;
+    private String nombre, apellido, correo, telefono;
 
-    public Usuarios(int id_Usuario, String nombre, String apellido, String email, String telefono){
+    public Usuarios(int id_Usuario, String nombre, String apellido, String correo, String telefono){
         this.id_Usuario = id_Usuario;
         this.nombre = nombre;
         this.apellido = apellido;
-        this.email = email;
+        this.correo = correo;
         this.telefono = telefono;
     }
 
@@ -41,12 +41,12 @@ public class Usuarios {
         this.apellido = apellido;
     }
 
-    public String getEmail() {
-        return email;
+    public String getCorreo() {
+        return correo;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setCorreo(String correo) {
+        this.correo = correo;
     }
 
     public String getTelefono() {
@@ -56,7 +56,6 @@ public class Usuarios {
     public void setTelefono(String telefono) {
         this.telefono = telefono;
     }
-
 }
 
 

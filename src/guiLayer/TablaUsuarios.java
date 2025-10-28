@@ -1,5 +1,8 @@
-
 package guiLayer;
+
+import dataLayer.DAOUsuarios;
+import dataLayer.DBConexion;
+import dataLayer.Usuarios;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -16,8 +19,7 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.util.ArrayList;
-import java.util.List;
+import java.sql.*;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -28,12 +30,10 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
-import utilerias.ManejadorArchivos;
 
 public class TablaUsuarios extends JPanel {
     DefaultTableModel modeloTabla;
     JTable tablaUsuarios;
-    private ManejadorArchivos manejadorArchivos = new ManejadorArchivos();
 
     public TablaUsuarios() {
         this.setLayout(new BorderLayout());
@@ -42,26 +42,31 @@ public class TablaUsuarios extends JPanel {
         lblTitulo.setHorizontalAlignment(0);
         this.add(lblTitulo, "North");
         JPanel panelTabla = new JPanel();
-        String[] columnas = new String[]{"Id", "Nombre", "Apellido", "Email", "Teléfono"};
+        String[] columnas = new String[]{"Id", "Nombre", "Apellido", "Correo", "Teléfono"};
+
         this.modeloTabla = new DefaultTableModel(columnas, 0) {
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
+
         this.tablaUsuarios = new JTable(this.modeloTabla);
         JScrollPane scrollPane = new JScrollPane(this.tablaUsuarios);
         scrollPane.setPreferredSize(new Dimension(600, 270));
         panelTabla.add(scrollPane);
-        this.cargarUsuariosDesdeArchivo();
+        this.cargarUsuariosDesdeDb();
         JPanel Botones = new JPanel(new FlowLayout());
         JButton btnAgregar = new JButton("Agregar Usuario");
         JButton btnEliminar = new JButton("Eliminar Usuario");
         JButton btnEditar = new JButton("Editar Usuario");
+
         Botones.add(btnAgregar);
         Botones.add(btnEliminar);
         Botones.add(btnEditar);
+
         panelTabla.add(Botones, "South");
         this.add(panelTabla, "Center");
+
         btnAgregar.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 TablaUsuarios.this.VentanaAgregarUsuario();
@@ -84,7 +89,7 @@ public class TablaUsuarios extends JPanel {
     }
 
     public void VentanaAgregarUsuario() {
-        JDialog dialog = new JDialog((Frame)null, "Agregar Usuario", true);
+        JDialog dialog = new JDialog((Frame) null, "Agregar Usuario", true);
         dialog.setSize(400, 300);
         dialog.setLocationRelativeTo(this);
         dialog.setLayout(new BorderLayout());
@@ -101,7 +106,7 @@ public class TablaUsuarios extends JPanel {
         if (filaSeleccionada == -1) {
             JOptionPane.showMessageDialog(this, "Por favor, seleccione un usuario para editar.");
         } else {
-            JDialog dialog = new JDialog((Frame)null, "Editar Usuario", true);
+            JDialog dialog = new JDialog((Frame) null, "Editar Usuario", true);
             dialog.setSize(400, 300);
             dialog.setLocationRelativeTo(this);
             dialog.setLayout(new BorderLayout());
@@ -116,48 +121,169 @@ public class TablaUsuarios extends JPanel {
 
     public void Eliminar() {
         int filaSeleccionada = this.tablaUsuarios.getSelectedRow();
-        String nombreUsuario = (String)this.modeloTabla.getValueAt(filaSeleccionada, 1);
-        String apellidoUsuario = (String)this.modeloTabla.getValueAt(filaSeleccionada, 2);
-        if (filaSeleccionada != -1) {
-            int confirmacion = JOptionPane.showConfirmDialog(this, "Esta seguro de que desea eliminar este usuario: " + nombreUsuario + " " + apellidoUsuario + "?", "Confirmar eliminacion", 0, 3);
-            if (confirmacion == 0) {
-                this.modeloTabla.removeRow(filaSeleccionada);
-                this.guardarUsuariosEnArchivo();
-                JOptionPane.showMessageDialog(this, "Usuario eliminado exitosamente.");
-            }
-        } else {
-            JOptionPane.showMessageDialog(this, "Por favor, seleccione una fila para eliminar.");
-        }
 
+        if (filaSeleccionada != -1) {
+            int id = (Integer) this.modeloTabla.getValueAt(filaSeleccionada, 0);
+            String nombreUsuario = (String) this.modeloTabla.getValueAt(filaSeleccionada, 1);
+            String apellidoUsuario = (String) this.modeloTabla.getValueAt(filaSeleccionada, 2);
+
+            int confirmacion = JOptionPane.showConfirmDialog(this,
+                    "¿Está seguro de que desea eliminar al usuario: " + nombreUsuario + " " + apellidoUsuario + "?",
+                    "Confirmar eliminación",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE);
+
+            if (confirmacion == JOptionPane.YES_OPTION) {
+                try {
+                    // Eliminar el usuario de la base de datos
+                    DAOUsuarios.Eliminar(id);
+
+                    // Recargar la tabla
+                    this.cargarUsuariosDesdeDb();
+
+                    JOptionPane.showMessageDialog(this, "Usuario eliminado exitosamente.");
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this,
+                            "Error al eliminar usuario: " + ex.getMessage(),
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    ex.printStackTrace();
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "Por favor, seleccione una fila para eliminar.");
+            }
+        }
     }
 
-    public void Editar(final JDialog dialog) {
-        final int filaSeleccionada = this.tablaUsuarios.getSelectedRow();
-        if (filaSeleccionada != -1) {
-            final int id = (Integer)this.modeloTabla.getValueAt(filaSeleccionada, 0);
-            String nombreActual = (String)this.modeloTabla.getValueAt(filaSeleccionada, 1);
-            String apellidoActual = (String)this.modeloTabla.getValueAt(filaSeleccionada, 2);
-            String emailActual = (String)this.modeloTabla.getValueAt(filaSeleccionada, 3);
-            String telefonoActual = (String)this.modeloTabla.getValueAt(filaSeleccionada, 4);
-            final JTextField txtNombre = new JTextField(nombreActual, 20);
-            final JTextField txtApellido = new JTextField(apellidoActual, 20);
-            final JTextField txtEmail = new JTextField(emailActual, 20);
-            final JTextField txtTelefono = new JTextField(telefonoActual, 20);
-            JButton btnGuardar = new JButton("Actualizar");
+        public void Editar ( final JDialog dialog){
+            final int filaSeleccionada = this.tablaUsuarios.getSelectedRow();
+            if (filaSeleccionada != -1) {
+                final int id = (Integer) this.modeloTabla.getValueAt(filaSeleccionada, 0);
+                String nombreActual = (String) this.modeloTabla.getValueAt(filaSeleccionada, 1);
+                String apellidoActual = (String) this.modeloTabla.getValueAt(filaSeleccionada, 2);
+                String correoActual = (String) this.modeloTabla.getValueAt(filaSeleccionada, 3);
+                String telefonoActual = (String) this.modeloTabla.getValueAt(filaSeleccionada, 4);
+
+                final JTextField txtNombre = new JTextField(nombreActual, 20);
+                final JTextField txtApellido = new JTextField(apellidoActual, 20);
+                final JTextField txtCorreo = new JTextField(correoActual, 20);
+                final JTextField txtTelefono = new JTextField(telefonoActual, 20);
+                JButton btnGuardar = new JButton("Actualizar");
+
+                JPanel jpCentro = new JPanel();
+                jpCentro.setLayout(new GridLayout(5, 2, 10, 10));
+                jpCentro.setBorder(BorderFactory.createEmptyBorder(20, 50, 20, 50));
+                jpCentro.setFont(new Font("Garamond", 0, 16));
+
+                jpCentro.add(new Label("Nombre: "));
+                jpCentro.add(txtNombre);
+                jpCentro.add(new Label("Apellido: "));
+                jpCentro.add(txtApellido);
+                jpCentro.add(new Label("Correo: "));
+                jpCentro.add(txtCorreo);
+                jpCentro.add(new Label("Teléfono: "));
+                jpCentro.add(txtTelefono);
+                jpCentro.add(btnGuardar);
+                dialog.add(jpCentro, "Center");
+
+                txtNombre.addKeyListener(new KeyAdapter() {
+                    public void keyTyped(KeyEvent e) {
+                        char caracter = e.getKeyChar();
+                        if (!Character.isLetter(caracter) && !Character.isSpaceChar(caracter) && caracter != '\b') {
+                            e.consume();
+                        }
+
+                    }
+                });
+                txtApellido.addKeyListener(new KeyAdapter() {
+                    public void keyTyped(KeyEvent e) {
+                        char caracter = e.getKeyChar();
+                        if (!Character.isLetter(caracter) && !Character.isSpaceChar(caracter) && caracter != '\b') {
+                            e.consume();
+                        }
+
+                    }
+                });
+                txtTelefono.addKeyListener(new KeyAdapter() {
+                    public void keyTyped(KeyEvent e) {
+                        char caracter = e.getKeyChar();
+                        if (!Character.isDigit(caracter) && caracter != '\b') {
+                            e.consume();
+                        }
+
+                        if (txtTelefono.getText().length() >= 10) {
+                            e.consume();
+                        }
+
+                    }
+                });
+                txtCorreo.addFocusListener(new FocusAdapter() {
+                    public void focusLost(FocusEvent e) {
+                        String correo = txtCorreo.getText();
+                        if (correo.contains("@") && correo.contains(".")) {
+                            txtCorreo.setBackground(Color.WHITE);
+                        } else {
+                            txtCorreo.setBackground(Color.RED);
+                            JOptionPane.showMessageDialog((Component) null, "Correo invalido, debe conterner @ y .");
+                        }
+
+                    }
+                });
+                btnGuardar.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        String nombre = txtNombre.getText();
+                        String apellido = txtApellido.getText();
+                        String correo = txtCorreo.getText();
+                        String telefono = txtTelefono.getText();
+                        if (TablaUsuarios.this.Validaciones(dialog, txtNombre, txtApellido, txtCorreo, txtTelefono, nombre, apellido, correo, telefono, id)) {
+                            TablaUsuarios.this.EditarDatos(nombre, apellido, correo, telefono, id);
+                            dialog.dispose();
+                        }
+
+                    }
+                });
+            }
+
+        }
+
+        public void Campos ( final JDialog dialog){
+            final int id = this.modeloTabla.getRowCount() + 1;
+            final JTextField txtNombre = new JTextField(20);
+            final JTextField txtApellido = new JTextField(20);
+            final JTextField txtCorreo = new JTextField(20);
+            final JTextField txtTelefono = new JTextField(20);
+
+            JButton btnGuardar = new JButton("Registrar");
             JPanel jpCentro = new JPanel();
             jpCentro.setLayout(new GridLayout(5, 2, 10, 10));
             jpCentro.setBorder(BorderFactory.createEmptyBorder(20, 50, 20, 50));
             jpCentro.setFont(new Font("Garamond", 0, 16));
+
             jpCentro.add(new Label("Nombre: "));
             jpCentro.add(txtNombre);
             jpCentro.add(new Label("Apellido: "));
             jpCentro.add(txtApellido);
-            jpCentro.add(new Label("Email: "));
-            jpCentro.add(txtEmail);
+            jpCentro.add(new Label("Correo: "));
+            jpCentro.add(txtCorreo);
             jpCentro.add(new Label("Teléfono: "));
             jpCentro.add(txtTelefono);
             jpCentro.add(btnGuardar);
             dialog.add(jpCentro, "Center");
+
+            btnGuardar.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    String nombre = txtNombre.getText();
+                    String apellido = txtApellido.getText();
+                    String correo = txtCorreo.getText();
+                    String telefono = txtTelefono.getText();
+
+                    if (TablaUsuarios.this.Validaciones(dialog, txtNombre, txtApellido, txtCorreo, txtTelefono, nombre, apellido, correo, telefono, 0)) {
+                        TablaUsuarios.this.InsercionDatos(id, nombre, apellido, correo, telefono);
+                        dialog.dispose();
+                    }
+                }
+            });
+
             txtNombre.addKeyListener(new KeyAdapter() {
                 public void keyTyped(KeyEvent e) {
                     char caracter = e.getKeyChar();
@@ -189,177 +315,118 @@ public class TablaUsuarios extends JPanel {
 
                 }
             });
-            txtEmail.addFocusListener(new FocusAdapter() {
+            txtCorreo.addFocusListener(new FocusAdapter() {
                 public void focusLost(FocusEvent e) {
-                    String email = txtEmail.getText();
-                    if (email.contains("@") && email.contains(".")) {
-                        txtEmail.setBackground(Color.WHITE);
+                    String correo = txtCorreo.getText();
+                    if (correo.contains("@") && correo.contains(".")) {
+                        txtCorreo.setBackground(Color.WHITE);
                     } else {
-                        txtEmail.setBackground(Color.RED);
-                        JOptionPane.showMessageDialog((Component)null, "Email invalido, debe conterner @ y .");
-                    }
-
-                }
-            });
-            btnGuardar.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    String nombre = txtNombre.getText();
-                    String apellido = txtApellido.getText();
-                    String email = txtEmail.getText();
-                    String telefono = txtTelefono.getText();
-                    if (TablaUsuarios.this.Validaciones(dialog, txtNombre, txtApellido, txtEmail, txtTelefono, nombre, apellido, email, telefono, id)) {
-                        TablaUsuarios.this.EditarDatos(filaSeleccionada, nombre, apellido, email, telefono, id);
-                        dialog.dispose();
+                        txtCorreo.setBackground(Color.RED);
+                        JOptionPane.showMessageDialog((Component) null, "Correo invalido, debe conterner @ y .");
                     }
 
                 }
             });
         }
 
-    }
-
-    public void Campos(final JDialog dialog) {
-        final int id = this.modeloTabla.getRowCount() + 1;
-        final JTextField txtNombre = new JTextField(20);
-        final JTextField txtApellido = new JTextField(20);
-        final JTextField txtEmail = new JTextField(20);
-        final JTextField txtTelefono = new JTextField(20);
-        JButton btnGuardar = new JButton("Registrar");
-        JPanel jpCentro = new JPanel();
-        jpCentro.setLayout(new GridLayout(5, 2, 10, 10));
-        jpCentro.setBorder(BorderFactory.createEmptyBorder(20, 50, 20, 50));
-        jpCentro.setFont(new Font("Garamond", 0, 16));
-        jpCentro.add(new Label("Nombre: "));
-        jpCentro.add(txtNombre);
-        jpCentro.add(new Label("Apellido: "));
-        jpCentro.add(txtApellido);
-        jpCentro.add(new Label("Email: "));
-        jpCentro.add(txtEmail);
-        jpCentro.add(new Label("Teléfono: "));
-        jpCentro.add(txtTelefono);
-        jpCentro.add(btnGuardar);
-        dialog.add(jpCentro, "Center");
-        btnGuardar.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                String nombre = txtNombre.getText();
-                String apellido = txtApellido.getText();
-                String email = txtEmail.getText();
-                String telefono = txtTelefono.getText();
-                if (TablaUsuarios.this.Validaciones(dialog, txtNombre, txtApellido, txtEmail, txtTelefono, nombre, apellido, email, telefono, id)) {
-                    TablaUsuarios.this.InsercionDatos(TablaUsuarios.this.modeloTabla, nombre, apellido, email, telefono, id);
-                    dialog.dispose();
-                }
-
-            }
-        });
-        txtNombre.addKeyListener(new KeyAdapter() {
-            public void keyTyped(KeyEvent e) {
-                char caracter = e.getKeyChar();
-                if (!Character.isLetter(caracter) && !Character.isSpaceChar(caracter) && caracter != '\b') {
-                    e.consume();
-                }
-
-            }
-        });
-        txtApellido.addKeyListener(new KeyAdapter() {
-            public void keyTyped(KeyEvent e) {
-                char caracter = e.getKeyChar();
-                if (!Character.isLetter(caracter) && !Character.isSpaceChar(caracter) && caracter != '\b') {
-                    e.consume();
-                }
-
-            }
-        });
-        txtTelefono.addKeyListener(new KeyAdapter() {
-            public void keyTyped(KeyEvent e) {
-                char caracter = e.getKeyChar();
-                if (!Character.isDigit(caracter) && caracter != '\b') {
-                    e.consume();
-                }
-
-                if (txtTelefono.getText().length() >= 10) {
-                    e.consume();
-                }
-
-            }
-        });
-        txtEmail.addFocusListener(new FocusAdapter() {
-            public void focusLost(FocusEvent e) {
-                String email = txtEmail.getText();
-                if (email.contains("@") && email.contains(".")) {
-                    txtEmail.setBackground(Color.WHITE);
+        public boolean Validaciones (JDialog dialog, JTextField txtNombre, JTextField txtApellido, JTextField
+        txtCorreo, JTextField txtTelefono, String nombre, String apellido, String correo, String telefono,int id){
+            if (!txtNombre.getText().isEmpty() && !txtApellido.getText().isEmpty() && !txtCorreo.getText().isEmpty() && !txtTelefono.getText().isEmpty()) {
+                if (txtTelefono.getText().length() == 10 && txtTelefono.getText().matches("[0-9]+")) {
+                    return true;
                 } else {
-                    txtEmail.setBackground(Color.RED);
-                    JOptionPane.showMessageDialog((Component)null, "Email invalido, debe conterner @ y .");
+                    JOptionPane.showMessageDialog(dialog, "El teléfono debe tener exactamente 10 dígitos");
+                    return false;
                 }
-
-            }
-        });
-    }
-
-    public boolean Validaciones(JDialog dialog, JTextField txtNombre, JTextField txtApellido, JTextField txtEmail, JTextField txtTelefono, String nombre, String apellido, String email, String telefono, int id) {
-        if (!txtNombre.getText().isEmpty() && !txtApellido.getText().isEmpty() && !txtEmail.getText().isEmpty() && !txtTelefono.getText().isEmpty()) {
-            if (txtTelefono.getText().length() == 10 && txtTelefono.getText().matches("[0-9]+")) {
-                JOptionPane.showMessageDialog(dialog, "Id: " + id + "\nUsuario: " + nombre + " " + apellido + "\nEmail: " + email + "\nTelefono: " + telefono + "\nregistrado exitosamente.");
-                txtNombre.setText("");
-                txtApellido.setText("");
-                txtEmail.setText("");
-                txtTelefono.setText("");
-                return true;
             } else {
-                JOptionPane.showMessageDialog(dialog, "El teléfono debe tener exactamente 10 dígitos");
+                JOptionPane.showMessageDialog(dialog, "Favor de no dejar campos vacíos");
                 return false;
             }
-        } else {
-            JOptionPane.showMessageDialog(dialog, "Favor de no dejar campos vacíos");
-            return false;
         }
-    }
 
-    public void InsercionDatos(DefaultTableModel modeloTabla, String nombre, String apellido, String email, String telefono, int id) {
-        modeloTabla.addRow(new Object[]{id, nombre, apellido, email, telefono});
-        this.guardarUsuariosEnArchivo();
-    }
+        public void InsercionDatos (int id, String nombre, String apellido, String correo, String telefono){
+            try {
+                //Crear objeto Usuario
+                Usuarios usuario = new Usuarios();
+                usuario.setId_Usuario(id);
+                usuario.setNombre(nombre);
+                usuario.setApellido(apellido);
+                usuario.setCorreo(correo);
+                usuario.setTelefono(telefono);
 
-    public void EditarDatos(int filaSeleccionada, String nombre, String apellido, String email, String telefono, int id) {
-        this.modeloTabla.setValueAt(id, filaSeleccionada, 0);
-        this.modeloTabla.setValueAt(nombre, filaSeleccionada, 1);
-        this.modeloTabla.setValueAt(apellido, filaSeleccionada, 2);
-        this.modeloTabla.setValueAt(email, filaSeleccionada, 3);
-        this.modeloTabla.setValueAt(telefono, filaSeleccionada, 4);
-        this.guardarUsuariosEnArchivo();
-    }
+                // Insertar los datos en la base de datos
+                DAOUsuarios.Insertar(usuario);
 
-    private void cargarUsuariosDesdeArchivo() {
-        List<String[]> usuarios = this.manejadorArchivos.cargarDatos("usuarios");
-        if (usuarios.isEmpty()) {
-            this.modeloTabla.addRow(new Object[]{1, "Juan", "Pérez", "juan.perez@example.com", "6675902346"});
-            this.modeloTabla.addRow(new Object[]{2, "Jesus", "Molina", "jmolina@gmail.com", "6672348902"});
-            this.modeloTabla.addRow(new Object[]{3, "Emiliano", "Arellanes", "emln@hotmail.com", "6673458101"});
-            this.guardarUsuariosEnArchivo();
-        } else {
-            for(String[] usuario : usuarios) {
-                if (usuario.length >= 5) {
-                    try {
-                        int id = Integer.parseInt(usuario[0]);
-                        this.modeloTabla.addRow(new Object[]{id, usuario[1], usuario[2], usuario[3], usuario[4]});
-                    } catch (NumberFormatException var5) {
-                        System.err.println("Error al parsear ID del usuario: " + usuario[0]);
-                    }
-                }
+                this.cargarUsuariosDesdeDb();
+
+                JOptionPane.showMessageDialog(this,"ID: " + id + "\nUsuario: " + nombre + " " + apellido + "\nCorreo: " + correo + "\nTelefono: " + telefono + "\nregistrado exitosamente.");
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this,
+                        "Error al guardar usuario: " + ex.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
             }
         }
 
-    }
+        public void EditarDatos (String nombre, String apellido, String correo, String telefono,
+        int id){
+            try {
+                // Crear objeto Usuario con los datos actualizados
+                Usuarios usuario = new Usuarios();
+                usuario.setId_Usuario(id);
+                usuario.setNombre(nombre);
+                usuario.setApellido(apellido);
+                usuario.setCorreo(correo);
+                usuario.setTelefono(telefono);
 
-    private void guardarUsuariosEnArchivo() {
-        List<String[]> usuarios = new ArrayList();
+                // Actualizra en la base de datos
+                DAOUsuarios.Actualizar(usuario);
 
-        for(int i = 0; i < this.modeloTabla.getRowCount(); ++i) {
-            String[] usuario = new String[]{this.modeloTabla.getValueAt(i, 0).toString(), this.modeloTabla.getValueAt(i, 1).toString(), this.modeloTabla.getValueAt(i, 2).toString(), this.modeloTabla.getValueAt(i, 3).toString(), this.modeloTabla.getValueAt(i, 4).toString()};
-            usuarios.add(usuario);
+                this.cargarUsuariosDesdeDb();
+
+                JOptionPane.showMessageDialog(this,
+                        "Usuario actualizado exitosamente.");
+
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this,
+                        "Error al actualizar usuario: " + ex.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
         }
 
-        this.manejadorArchivos.guardarDatos("usuarios", usuarios);
+
+        private void cargarUsuariosDesdeDb () {
+            this.modeloTabla.setRowCount(0);
+
+            try {
+                Connection conn = DBConexion.GetConexion();
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery("SELECT ID, nombre, apellido, correo, telefono FROM Usuarios");
+
+                // Cargar los datos en la tabla
+                while (rs.next()) {
+                    int id = rs.getInt("ID");
+                    String nombre = rs.getString("Nombre");
+                    String apellido = rs.getString("Apellido");
+                    String correo = rs.getString("correo");
+                    String telefono = rs.getString("Telefono");
+
+                    this.modeloTabla.addRow(new Object[]{id, nombre, apellido, correo, telefono});
+                }
+
+                // Cerrar los recursos
+                rs.close();
+                stmt.close();
+                conn.close();
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this,
+                        "Error al cargar usuarios desde la base de datos: " + ex.getMessage(),
+                        "Error de Conexion",
+                        JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
+        }
     }
-}
