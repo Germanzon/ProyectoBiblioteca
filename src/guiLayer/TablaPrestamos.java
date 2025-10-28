@@ -9,11 +9,12 @@ import java.awt.Frame;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -24,6 +25,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
+
+import dataLayer.*;
 import utilerias.ManejadorArchivos;
 
 public class TablaPrestamos extends JPanel {
@@ -40,7 +43,6 @@ public class TablaPrestamos extends JPanel {
     public TablaPrestamos(TablaLibros tablaLibros, TablaUsuarios tablaUsuarios) {
         this.tablaLibros = tablaLibros;
         this.tablaUsuarios = tablaUsuarios;
-        this.manejadorArchivos = new ManejadorArchivos();
         this.initComponents();
     }
 
@@ -64,7 +66,8 @@ public class TablaPrestamos extends JPanel {
         scrollPane.setPreferredSize(new Dimension(800, 400));
         panelTabla.add(scrollPane);
 
-        this.cargarPrestamosDesdeArchivo();
+        //Se cargan los datos de la tabla
+        this.cargarPrestamosDesdeDb();
         this.add(panelTabla);
 
         JPanel botonesPrestamos = new JPanel();
@@ -83,7 +86,7 @@ public class TablaPrestamos extends JPanel {
         });
         botonesPrestamos.add(nuevoPrestamo);
         botonesPrestamos.add(devolverPrestamo);
-        panelTabla.add(botonesPrestamos, "South");
+        panelTabla.add(botonesPrestamos);
     }
 
     private void dialogoNuevoPrestamo() {
@@ -94,7 +97,7 @@ public class TablaPrestamos extends JPanel {
         JLabel lblTitulo = new JLabel("Nuevo Préstamo");
         lblTitulo.setFont(new Font("Garamond", 3, 20));
         lblTitulo.setHorizontalAlignment(0);
-        dialogo.add(lblTitulo, "North");
+        dialogo.add(lblTitulo);
         this.Campos(dialogo);
         dialogo.setVisible(true);
     }
@@ -184,7 +187,7 @@ public class TablaPrestamos extends JPanel {
         DateTimeFormatter formato = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         int idPrestamo = this.modeloTabla.getRowCount() + 1;
         this.modeloTabla.addRow(new Object[]{idPrestamo, usuarioSeleccionado, libroSeleccionado, fechaPrestamo.format(formato), fechaDevolucion.format(formato), "En Préstamo"});
-        this.guardarPrestamosEnArchivo();
+        this.InsercionDatos(idPrestamo, usuarioSeleccionado, libroSeleccionado, fechaPrestamo.format(formato), fechaDevolucion.format(formato), "En Préstamo" );
         this.libroNoDisponible(libroSeleccionado);
         JOptionPane.showMessageDialog(this, "Préstamo: " + idPrestamo + "\nUsuario: " + usuarioSeleccionado + "\nLibro: " + libroSeleccionado + "\nFecha Devolución: " + fechaDevolucion.format(formato) + "\nRegistrado exitosamente.");
         dialogo.dispose();
@@ -227,7 +230,7 @@ public class TablaPrestamos extends JPanel {
                 int confirmacion = JOptionPane.showConfirmDialog(this, "¿Confirma la devolución del libro " + nombreLibro + " de parte del usuario " + nombreUsuario + " con un monto total de multa de $" + multa + ".00?", "Confirmar devolución", 0);
                 if (confirmacion == 0) {
                     this.modeloTabla.setValueAt("Devuelto", filaSeleccionada, 5);
-                    this.guardarPrestamosEnArchivo();
+                    this.ActualizarDatos(estado);
                     JOptionPane.showMessageDialog(this, "El libro fue devuelto exitosamente y se encuentra disponible para nuevos préstamos");
                     this.libroDisponible(nombreLibro);
                 } else {
@@ -251,33 +254,87 @@ public class TablaPrestamos extends JPanel {
 
     }
 
-    private void cargarPrestamosDesdeArchivo() {
-        for(String[] prestamo : this.manejadorArchivos.cargarDatos("prestamos")) {
-            if (prestamo.length >= 6) {
-                try {
-                    int id = Integer.parseInt(prestamo[0]);
-                    String usuario = prestamo[1];
-                    String libro = prestamo[2];
-                    String fechaPrestamo = prestamo[3];
-                    String fechaDevolucion = prestamo[4];
-                    String estado = prestamo[5];
-                    this.modeloTabla.addRow(new Object[]{id, usuario, libro, fechaPrestamo, fechaDevolucion, estado});
-                } catch (NumberFormatException e) {
-                    System.err.println("Error al cargar prestamo: " + e.getMessage());
-                }
-            }
-        }
+    private void cargarPrestamosDesdeDb() {
+        this.modeloTabla.setRowCount(0);
 
+        try {
+            Connection conn = DBConexion.GetConexion();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("Select p.ID_Prestamo, u.Nombre as Usuario, l.titulo as Titulo, p.Fecha_Prestamo, p.Fecha_Devolucion,p.Estado FROM Prestamos p\n" +
+                    "join Usuarios u on p.ID_Usuario = u.ID_Usuario\n" +
+                    "join Libros l on p.ID_Libro = l.ID_Libros");
+
+            // Cargar los datos en la tabla
+            while (rs.next()) {
+                int id_Prestamo = rs.getInt("ID_Prestamo");
+                String nombre = rs.getString("Usuario");
+                String titulo = rs.getString("Titulo");
+                String fechaPrestamo = rs.getString("Fecha Prestamo");
+                String fechaDevolucion = rs.getString("Fecha Devolucion");
+                String estado = rs.getString("Estado");
+
+                this.modeloTabla.addRow(new Object[]{id_Prestamo, nombre, titulo, fechaPrestamo, fechaDevolucion, estado});
+            }
+
+            // Cerrar los recursos
+            rs.close();
+            stmt.close();
+            conn.close();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Error al cargar usuarios desde la base de datos: " + ex.getMessage(),
+                    "Error de Conexion",
+                    JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
     }
 
-    private void guardarPrestamosEnArchivo() {
-        List<String[]> prestamos = new ArrayList();
+    public void InsercionDatos (int idPrestamo, String nombre, String titulo, String fechaPrestamo, String fechaDevolucion, String estado){
+        try {
+            //Crear objetos de las clases
+            Usuarios usuario = new Usuarios();
+            Libros libro  = new Libros();
+            Prestamos prestamo = new Prestamos();
 
-        for(int i = 0; i < this.modeloTabla.getRowCount(); ++i) {
-            String[] prestamo = new String[]{this.modeloTabla.getValueAt(i, 0).toString(), this.modeloTabla.getValueAt(i, 1).toString(), this.modeloTabla.getValueAt(i, 2).toString(), this.modeloTabla.getValueAt(i, 3).toString(), this.modeloTabla.getValueAt(i, 4).toString(), this.modeloTabla.getValueAt(i, 5).toString()};
-            prestamos.add(prestamo);
+            prestamo.setId_Prestamo(idPrestamo);
+            usuario.setNombre(nombre);
+            libro.setTitulo(titulo);
+            prestamo.setFechaPrestamo(fechaPrestamo);
+            prestamo.setFechaDevolucion(fechaDevolucion);
+            prestamo.setEstado(estado);
+
+            // Insertar los datos en la base de datos
+            DAOPrestamos.Insertar(usuario, libro);
+
+            this.cargarPrestamosDesdeDb();
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Error al guardar prestamo: " + ex.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
         }
+    }
 
-        this.manejadorArchivos.guardarDatos("prestamos", prestamos);
+    public void ActualizarDatos (String estado){
+        try {
+            //Crear objetos de las clases
+            Prestamos prestamo = new Prestamos();
+
+            prestamo.setEstado(estado);
+
+            // Insertar los datos en la base de datos
+            DAOPrestamos.Devolver(prestamo);
+
+            this.cargarPrestamosDesdeDb();
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Error al actualizar prestamo: " + ex.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
     }
 }

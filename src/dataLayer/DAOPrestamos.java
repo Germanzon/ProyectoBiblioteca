@@ -6,12 +6,12 @@ import java.sql.PreparedStatement;
 public class DAOPrestamos extends DBConexion{
 
     //Insertar nuevos Prestamos
-    public static void Insertar(Prestamos reg) throws Exception {
+    public static void Insertar(Usuarios regUsuarios, Libros regLibros) throws Exception {
         Connection con = GetConexion();
         String Select = "INSERT INTO Prestamos (ID_Usuario, ID_Libro)" + "VALUES (?,?)";
         PreparedStatement ps = con.prepareStatement(Select);
-        ps.setInt(1, reg.getID_Usuario());
-        ps.setInt(2, reg.getID_Libro());
+        ps.setInt(1, regUsuarios.getId_Usuario());
+        ps.setInt(2, regLibros.getId_Libro());
         ps.executeUpdate();
         ps.close();
         con.close();

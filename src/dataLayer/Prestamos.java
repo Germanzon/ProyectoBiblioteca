@@ -7,13 +7,15 @@ public class Prestamos {
     private Usuarios ID_Usuario;
     private Libros ID_Libro;
 
-    public Prestamos(int id_Prestamo, Usuarios ID_Usuario, Libros ID_Libro, String fechaPrestamo, String fechaDevolucion, String estado) {
+    public Prestamos(int id_Prestamo, String fechaPrestamo, String fechaDevolucion, String estado) {
         this.id_Prestamo = id_Prestamo;
-        this.ID_Usuario = ID_Usuario;
-        this.ID_Libro = ID_Libro;
         this.fechaPrestamo = fechaPrestamo;
         this.fechaDevolucion = fechaDevolucion;
         this.estado = estado;
+    }
+
+    public Prestamos(){
+        this(0, "", "", "");
     }
 
     public int getId_Prestamo() {
@@ -22,22 +24,6 @@ public class Prestamos {
 
     public void setId_Prestamo(int id_Prestamo) {
         this.id_Prestamo = id_Prestamo;
-    }
-
-    public int getID_Usuario() {
-        return ID_Usuario.getId_Usuario();
-    }
-
-    public void setID_Usuario(Usuarios ID_Usuario) {
-        this.ID_Usuario = ID_Usuario;
-    }
-
-    public int getID_Libro() {
-        return ID_Libro.getId_Libro();
-    }
-
-    public void setID_Libro(Libros ID_Libro) {
-        this.ID_Libro = ID_Libro;
     }
 
     public String getFechaPrestamo() {

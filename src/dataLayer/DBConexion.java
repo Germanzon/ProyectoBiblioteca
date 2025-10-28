@@ -8,9 +8,9 @@ public class DBConexion {
 
     public static Connection GetConexion() throws SQLException {
         Connection Conn = null;
-        String cadena = "jdbc:sqlserver://localhost:1433;database=Biblioteca" +
-                ";user=sa;password=hola;loginTimeout=30;"+
-                "trustServerCertificate=true";
+        String cadena = "jdbc:sqlserver://localhost:1433;database=Bibioteca" +
+                ";user=sa;password=SqlServerRoot2025!;loginTimeout=30;"+
+                "trustServerCertificate=true";;
         try{
             Conn = DriverManager.getConnection(cadena);
         } catch (SQLException ex) {

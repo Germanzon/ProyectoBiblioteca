@@ -13,6 +13,10 @@ public class Libros {
         this.disponibilidad = disponibilidad;
     }
 
+    public Libros(){
+        this(0, "", "", 0, "");
+    }
+
     public int getId_Libro() {
         return id_Libro;
     }
