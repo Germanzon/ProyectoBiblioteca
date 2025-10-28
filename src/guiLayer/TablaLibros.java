@@ -56,7 +56,7 @@ public class TablaLibros extends JPanel {
         };
         this.tablaLibros = new JTable(this.modeloTabla);
         JScrollPane scrollPane = new JScrollPane(this.tablaLibros);
-        scrollPane.setPreferredSize(new Dimension(600, 270));
+        scrollPane.setPreferredSize(new Dimension(800, 400));
         panelTabla.add(scrollPane);
         this.cargarLibrosDesdeArchivo();
         this.add(panelTabla, "Center");

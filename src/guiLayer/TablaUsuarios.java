@@ -52,7 +52,7 @@ public class TablaUsuarios extends JPanel {
 
         this.tablaUsuarios = new JTable(this.modeloTabla);
         JScrollPane scrollPane = new JScrollPane(this.tablaUsuarios);
-        scrollPane.setPreferredSize(new Dimension(600, 270));
+        scrollPane.setPreferredSize(new Dimension(800, 400));
         panelTabla.add(scrollPane);
         this.cargarUsuariosDesdeDb();
         JPanel Botones = new JPanel(new FlowLayout());
@@ -380,7 +380,7 @@ public class TablaUsuarios extends JPanel {
                 usuario.setCorreo(correo);
                 usuario.setTelefono(telefono);
 
-                // Actualizra en la base de datos
+                // Actualiza en la base de datos
                 DAOUsuarios.Actualizar(usuario);
 
                 this.cargarUsuariosDesdeDb();

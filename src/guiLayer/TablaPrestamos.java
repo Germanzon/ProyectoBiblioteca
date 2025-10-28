@@ -29,9 +29,11 @@ import utilerias.ManejadorArchivos;
 public class TablaPrestamos extends JPanel {
     private TablaLibros tablaLibros;
     private TablaUsuarios tablaUsuarios;
+
     DefaultTableModel modeloTabla;
     JTable tablaPrestamos;
     private ManejadorArchivos manejadorArchivos;
+
     JComboBox<String> comboBoxUsuarios = new JComboBox();
     JComboBox<String> comboBoxLibros = new JComboBox();
 
@@ -48,6 +50,7 @@ public class TablaPrestamos extends JPanel {
         lblTitulo.setFont(new Font("Garamond", 3, 30));
         lblTitulo.setHorizontalAlignment(0);
         this.add(lblTitulo, "North");
+
         JPanel panelTabla = new JPanel();
         String[] columnas = new String[]{"Id Préstamo", "Usuario", "Libro", "Fecha Préstamo", "Fecha devolución", "Estado"};
         this.modeloTabla = new DefaultTableModel(columnas, 0) {
@@ -55,15 +58,19 @@ public class TablaPrestamos extends JPanel {
                 return false;
             }
         };
+
         this.tablaPrestamos = new JTable(this.modeloTabla);
         JScrollPane scrollPane = new JScrollPane(this.tablaPrestamos);
-        scrollPane.setPreferredSize(new Dimension(600, 270));
+        scrollPane.setPreferredSize(new Dimension(800, 400));
         panelTabla.add(scrollPane);
+
         this.cargarPrestamosDesdeArchivo();
-        this.add(panelTabla, "Center");
+        this.add(panelTabla);
+
         JPanel botonesPrestamos = new JPanel();
         JButton nuevoPrestamo = new JButton("Nuevo Préstamo");
         JButton devolverPrestamo = new JButton("Devolver Préstamo");
+
         nuevoPrestamo.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 TablaPrestamos.this.dialogoNuevoPrestamo();
@@ -97,6 +104,7 @@ public class TablaPrestamos extends JPanel {
         this.mostrarUsuarios(this.comboBoxUsuarios);
         this.comboBoxLibros = new JComboBox();
         this.mostrarLibros(this.comboBoxLibros);
+
         JPanel jpCentro = new JPanel();
         jpCentro.setLayout(new GridLayout(5, 2, 10, 10));
         jpCentro.setBorder(BorderFactory.createEmptyBorder(20, 50, 20, 50));
@@ -105,8 +113,10 @@ public class TablaPrestamos extends JPanel {
         jpCentro.add(this.comboBoxUsuarios);
         jpCentro.add(new JLabel("Libro"));
         jpCentro.add(this.comboBoxLibros);
+
         JButton btnCrear = new JButton("Crear Préstamo");
         JButton btnCancelar = new JButton("Cancelar");
+
         btnCrear.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (TablaPrestamos.this.validacionesNuevoPrestamo(TablaPrestamos.this.comboBoxUsuarios, TablaPrestamos.this.comboBoxLibros)) {
@@ -115,11 +125,13 @@ public class TablaPrestamos extends JPanel {
 
             }
         });
+
         btnCancelar.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 dialogo.dispose();
             }
         });
+
         JPanel botonesNuevoPrestamo = new JPanel(new FlowLayout());
         botonesNuevoPrestamo.add(btnCrear);
         botonesNuevoPrestamo.add(btnCancelar);
