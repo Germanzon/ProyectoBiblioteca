@@ -26,7 +26,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 import utilerias.ManejadorArchivos;
 
-public class Libros extends JPanel {
+public class TablaLibros extends JPanel {
     private JTable tablaLibros;
     private DefaultTableModel modeloTabla;
     private ManejadorArchivos manejadorArchivos = new ManejadorArchivos();
@@ -34,7 +34,7 @@ public class Libros extends JPanel {
     private JButton btnActualizar;
     private JButton btnEliminar;
 
-    public Libros() {
+    public TablaLibros() {
         this.setLayout(new BorderLayout());
         JLabel lblTitulo = new JLabel("Libros");
         lblTitulo.setFont(new Font("Garamond", 3, 30));
@@ -63,25 +63,25 @@ public class Libros extends JPanel {
         panelTabla.add(panelBotonesPestaniaLibro, "South");
         this.btnAgregar.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                Libros.this.mostrarDialogoAgregarLibro();
+                TablaLibros.this.mostrarDialogoAgregarLibro();
             }
         });
         this.btnActualizar.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                Libros.this.mostrarDialogoActualizarLibro();
+                TablaLibros.this.mostrarDialogoActualizarLibro();
             }
         });
         this.btnEliminar.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                int filaSeleccionada = Libros.this.tablaLibros.getSelectedRow();
+                int filaSeleccionada = TablaLibros.this.tablaLibros.getSelectedRow();
                 if (filaSeleccionada != -1) {
-                    int confirmacion = JOptionPane.showConfirmDialog(Libros.this, "¿Estas seguro de que deseas eliminar este libro?", "Confirmar Eliminación", 0);
+                    int confirmacion = JOptionPane.showConfirmDialog(TablaLibros.this, "¿Estas seguro de que deseas eliminar este libro?", "Confirmar Eliminación", 0);
                     if (confirmacion == 0) {
-                        Libros.this.modeloTabla.removeRow(filaSeleccionada);
-                        Libros.this.guardarLibrosEnArchivo();
+                        TablaLibros.this.modeloTabla.removeRow(filaSeleccionada);
+                        TablaLibros.this.guardarLibrosEnArchivo();
                     }
                 } else {
-                    JOptionPane.showMessageDialog(Libros.this, "Por favor, selecciona un libro para eliminar.", "No hay selección", 2);
+                    JOptionPane.showMessageDialog(TablaLibros.this, "Por favor, selecciona un libro para eliminar.", "No hay selección", 2);
                 }
 
             }

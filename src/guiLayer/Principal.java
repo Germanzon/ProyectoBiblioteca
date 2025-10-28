@@ -31,14 +31,14 @@ public class Principal extends JFrame {
     private JPanel jpSecundario;
     CardLayout cardLayout = new CardLayout();
     private JLabel lblHora;
-    private Libros jpLibros;
-    private Usuarios jpUsuarios;
+    private TablaLibros jpTablaLibros;
+    private TablaUsuarios jpTablaUsuarios;
 
     public Principal(String title) throws HeadlessException {
         super(title);
         this.setSize(1000, 600);
         this.setLocationRelativeTo((Component)null);
-        this.setDefaultCloseOperation(3);
+        this.setDefaultCloseOperation(EXIT_ON_CLOSE);
         this.setResizable(false);
         this.InitComponents();
     }
@@ -59,11 +59,11 @@ public class Principal extends JFrame {
         JPanel jpInicio = new JPanel();
         jpTarjetas.add(jpInicio, "Inicio");
         this.ContenidoInicio(jpInicio);
-        this.jpLibros = new Libros();
-        jpTarjetas.add(this.jpLibros, "Libros");
-        this.jpUsuarios = new Usuarios();
-        jpTarjetas.add(this.jpUsuarios, "Usuarios");
-        JPanel jpPrestamos = new Prestamos(this.jpLibros, this.jpUsuarios);
+        this.jpTablaLibros = new TablaLibros();
+        jpTarjetas.add(this.jpTablaLibros, "Libros");
+        this.jpTablaUsuarios = new TablaUsuarios();
+        jpTarjetas.add(this.jpTablaUsuarios, "Usuarios");
+        JPanel jpPrestamos = new TablaPrestamos(this.jpTablaLibros, this.jpTablaUsuarios);
         jpTarjetas.add(jpPrestamos, "Préstamos");
         this.jpSecundario.add(jpTarjetas, "Center");
         this.empezarTimerHora();

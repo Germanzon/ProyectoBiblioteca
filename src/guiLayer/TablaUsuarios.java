@@ -30,12 +30,12 @@ import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 import utilerias.ManejadorArchivos;
 
-public class Usuarios extends JPanel {
+public class TablaUsuarios extends JPanel {
     DefaultTableModel modeloTabla;
     JTable tablaUsuarios;
     private ManejadorArchivos manejadorArchivos = new ManejadorArchivos();
 
-    public Usuarios() {
+    public TablaUsuarios() {
         this.setLayout(new BorderLayout());
         JLabel lblTitulo = new JLabel("Usuarios");
         lblTitulo.setFont(new Font("Garamond", 3, 30));
@@ -64,17 +64,17 @@ public class Usuarios extends JPanel {
         this.add(panelTabla, "Center");
         btnAgregar.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                Usuarios.this.VentanaAgregarUsuario();
+                TablaUsuarios.this.VentanaAgregarUsuario();
             }
         });
         btnEliminar.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                Usuarios.this.Eliminar();
+                TablaUsuarios.this.Eliminar();
             }
         });
         btnEditar.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                Usuarios.this.VentanaEditarUsuario();
+                TablaUsuarios.this.VentanaEditarUsuario();
             }
         });
     }
@@ -207,8 +207,8 @@ public class Usuarios extends JPanel {
                     String apellido = txtApellido.getText();
                     String email = txtEmail.getText();
                     String telefono = txtTelefono.getText();
-                    if (Usuarios.this.Validaciones(dialog, txtNombre, txtApellido, txtEmail, txtTelefono, nombre, apellido, email, telefono, id)) {
-                        Usuarios.this.EditarDatos(filaSeleccionada, nombre, apellido, email, telefono, id);
+                    if (TablaUsuarios.this.Validaciones(dialog, txtNombre, txtApellido, txtEmail, txtTelefono, nombre, apellido, email, telefono, id)) {
+                        TablaUsuarios.this.EditarDatos(filaSeleccionada, nombre, apellido, email, telefono, id);
                         dialog.dispose();
                     }
 
@@ -245,8 +245,8 @@ public class Usuarios extends JPanel {
                 String apellido = txtApellido.getText();
                 String email = txtEmail.getText();
                 String telefono = txtTelefono.getText();
-                if (Usuarios.this.Validaciones(dialog, txtNombre, txtApellido, txtEmail, txtTelefono, nombre, apellido, email, telefono, id)) {
-                    Usuarios.this.InsercionDatos(Usuarios.this.modeloTabla, nombre, apellido, email, telefono, id);
+                if (TablaUsuarios.this.Validaciones(dialog, txtNombre, txtApellido, txtEmail, txtTelefono, nombre, apellido, email, telefono, id)) {
+                    TablaUsuarios.this.InsercionDatos(TablaUsuarios.this.modeloTabla, nombre, apellido, email, telefono, id);
                     dialog.dispose();
                 }
 

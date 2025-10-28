@@ -26,18 +26,18 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import utilerias.ManejadorArchivos;
 
-public class Prestamos extends JPanel {
-    private Libros libros;
-    private Usuarios usuarios;
+public class TablaPrestamos extends JPanel {
+    private TablaLibros tablaLibros;
+    private TablaUsuarios tablaUsuarios;
     DefaultTableModel modeloTabla;
     JTable tablaPrestamos;
     private ManejadorArchivos manejadorArchivos;
     JComboBox<String> comboBoxUsuarios = new JComboBox();
     JComboBox<String> comboBoxLibros = new JComboBox();
 
-    public Prestamos(Libros libros, Usuarios usuarios) {
-        this.libros = libros;
-        this.usuarios = usuarios;
+    public TablaPrestamos(TablaLibros tablaLibros, TablaUsuarios tablaUsuarios) {
+        this.tablaLibros = tablaLibros;
+        this.tablaUsuarios = tablaUsuarios;
         this.manejadorArchivos = new ManejadorArchivos();
         this.initComponents();
     }
@@ -66,12 +66,12 @@ public class Prestamos extends JPanel {
         JButton devolverPrestamo = new JButton("Devolver Préstamo");
         nuevoPrestamo.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                Prestamos.this.dialogoNuevoPrestamo();
+                TablaPrestamos.this.dialogoNuevoPrestamo();
             }
         });
         devolverPrestamo.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                Prestamos.this.dialogoDevolverPrestamo();
+                TablaPrestamos.this.dialogoDevolverPrestamo();
             }
         });
         botonesPrestamos.add(nuevoPrestamo);
@@ -109,8 +109,8 @@ public class Prestamos extends JPanel {
         JButton btnCancelar = new JButton("Cancelar");
         btnCrear.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                if (Prestamos.this.validacionesNuevoPrestamo(Prestamos.this.comboBoxUsuarios, Prestamos.this.comboBoxLibros)) {
-                    Prestamos.this.crearNuevoPrestamo(Prestamos.this.comboBoxUsuarios, Prestamos.this.comboBoxLibros, dialogo);
+                if (TablaPrestamos.this.validacionesNuevoPrestamo(TablaPrestamos.this.comboBoxUsuarios, TablaPrestamos.this.comboBoxLibros)) {
+                    TablaPrestamos.this.crearNuevoPrestamo(TablaPrestamos.this.comboBoxUsuarios, TablaPrestamos.this.comboBoxLibros, dialogo);
                 }
 
             }
@@ -128,7 +128,7 @@ public class Prestamos extends JPanel {
     }
 
     private void mostrarUsuarios(JComboBox<String> comboBoxUsuarios) {
-        DefaultTableModel modeloUsuarios = this.usuarios.getModeloTabla();
+        DefaultTableModel modeloUsuarios = this.tablaUsuarios.getModeloTabla();
 
         for(int i = 0; i < modeloUsuarios.getRowCount(); ++i) {
             String nombre = (String)modeloUsuarios.getValueAt(i, 1);
@@ -139,7 +139,7 @@ public class Prestamos extends JPanel {
     }
 
     private void mostrarLibros(JComboBox<String> comboBoxLibros) {
-        DefaultTableModel modeloLibros = this.libros.getModeloTabla();
+        DefaultTableModel modeloLibros = this.tablaLibros.getModeloTabla();
 
         for(int i = 0; i < modeloLibros.getRowCount(); ++i) {
             Boolean disponible = (Boolean)modeloLibros.getValueAt(i, 4);
@@ -179,12 +179,12 @@ public class Prestamos extends JPanel {
     }
 
     private void libroNoDisponible(String libroSeleccionado) {
-        DefaultTableModel modeloLibros = this.libros.getModeloTabla();
+        DefaultTableModel modeloLibros = this.tablaLibros.getModeloTabla();
 
         for(int i = 0; i < modeloLibros.getRowCount(); ++i) {
             String tituloLibro = (String)modeloLibros.getValueAt(i, 1);
             if (tituloLibro.equals(libroSeleccionado)) {
-                this.libros.cambiarDisponibilidad(i, false);
+                this.tablaLibros.cambiarDisponibilidad(i, false);
                 break;
             }
         }
@@ -227,12 +227,12 @@ public class Prestamos extends JPanel {
     }
 
     private void libroDisponible(String libroSeleccionado) {
-        DefaultTableModel modeloLibros = this.libros.getModeloTabla();
+        DefaultTableModel modeloLibros = this.tablaLibros.getModeloTabla();
 
         for(int i = 0; i < modeloLibros.getRowCount(); ++i) {
             String tituloLibro = (String)modeloLibros.getValueAt(i, 1);
             if (tituloLibro.equals(libroSeleccionado)) {
-                this.libros.cambiarDisponibilidad(i, true);
+                this.tablaLibros.cambiarDisponibilidad(i, true);
                 break;
             }
         }
