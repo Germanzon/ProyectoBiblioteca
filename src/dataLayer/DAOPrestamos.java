@@ -22,7 +22,7 @@ public class DAOPrestamos extends DBConexion{
         Connection con = GetConexion();
         String Select = "UPDATE Prestamos SET estado = 'Devuelto' WHERE ID_Prestamo = ? ";
         PreparedStatement ps = con.prepareStatement(Select);
-        ps.setString(1, reg.getEstado());
+        ps.setInt(1, reg.getId_Prestamo());
         ps.executeUpdate();
         ps.close();
         con.close();
