@@ -2,10 +2,10 @@ package dataLayer;
 
 public class Libros {
 
-    private int id_Libro, anio_pubicacion;
-    private String titulo, autor, disponibilidad;
+    private int id_Libro, anio_pubicacion,  disponibilidad;
+    private String titulo, autor;
 
-    public Libros(int id_Libro, String titulo, String autor, int anio_publicacion, String disponibilidad){
+    public Libros(int id_Libro, String titulo, String autor, int anio_publicacion, int disponibilidad){
         this.id_Libro = id_Libro;
         this.titulo = titulo;
         this.autor = autor;
@@ -14,7 +14,7 @@ public class Libros {
     }
 
     public Libros(){
-        this(0, "", "", 0, "");
+        this(0, "", "", 0, 0);
     }
 
     public int getId_Libro() {
@@ -49,11 +49,11 @@ public class Libros {
         this.anio_pubicacion = anio_pubicacion;
     }
 
-    public String getDisponibilidad() {
+    public int getDisponibilidad() {
         return disponibilidad;
     }
 
-    public void setDisponibilidad(String disponibilidad) {
+    public void setDisponibilidad(int disponibilidad) {
         this.disponibilidad = disponibilidad;
     }
 

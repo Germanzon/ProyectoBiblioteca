@@ -416,7 +416,6 @@ public class TablaUsuarios extends JPanel {
                     this.modeloTabla.addRow(new Object[]{id, nombre, apellido, correo, telefono});
                 }
 
-                // Cerrar los recursos
                 rs.close();
                 stmt.close();
                 conn.close();

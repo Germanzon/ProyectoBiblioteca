@@ -1,6 +1,8 @@
-
-
 package guiLayer;
+
+import dataLayer.DBConexion;
+import dataLayer.DAOLibros;
+import dataLayer.Libros;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -11,6 +13,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.BorderFactory;
@@ -24,12 +29,11 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
-import utilerias.ManejadorArchivos;
+
 
 public class TablaLibros extends JPanel {
     private JTable tablaLibros;
     private DefaultTableModel modeloTabla;
-    private ManejadorArchivos manejadorArchivos = new ManejadorArchivos();
     private JButton btnAgregar;
     private JButton btnActualizar;
     private JButton btnEliminar;
@@ -40,15 +44,18 @@ public class TablaLibros extends JPanel {
         lblTitulo.setFont(new Font("Garamond", 3, 30));
         lblTitulo.setHorizontalAlignment(0);
         this.add(lblTitulo, "North");
+
         JPanel panelBotonesPestaniaLibro = new JPanel();
         this.btnAgregar = new JButton("Agregar Libro");
         this.btnActualizar = new JButton("Actualizar Libro");
         this.btnEliminar = new JButton("Eliminar Libro");
+
         panelBotonesPestaniaLibro.add(this.btnAgregar);
         panelBotonesPestaniaLibro.add(this.btnActualizar);
         panelBotonesPestaniaLibro.add(this.btnEliminar);
+
         JPanel panelTabla = new JPanel();
-        String[] columnas = new String[]{"ID", "Título", "Autor", "Año", "Disponibilidad"};
+        String[] columnas = new String[]{"ID", "Título", "Autor", "Año", "Copias Disponibles"};
         this.modeloTabla = new DefaultTableModel(columnas, 0) {
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -58,19 +65,24 @@ public class TablaLibros extends JPanel {
         JScrollPane scrollPane = new JScrollPane(this.tablaLibros);
         scrollPane.setPreferredSize(new Dimension(800, 400));
         panelTabla.add(scrollPane);
-        this.cargarLibrosDesdeArchivo();
-        this.add(panelTabla, "Center");
-        panelTabla.add(panelBotonesPestaniaLibro, "South");
+
+        //Se cargan los libros desde la base de datos
+        this.cargarLibrosDesdeDb();
+        this.add(panelTabla);
+        panelTabla.add(panelBotonesPestaniaLibro);
+
         this.btnAgregar.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 TablaLibros.this.mostrarDialogoAgregarLibro();
             }
         });
+
         this.btnActualizar.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 TablaLibros.this.mostrarDialogoActualizarLibro();
             }
         });
+
         this.btnEliminar.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 int filaSeleccionada = TablaLibros.this.tablaLibros.getSelectedRow();
@@ -92,8 +104,8 @@ public class TablaLibros extends JPanel {
         return this.modeloTabla;
     }
 
-    public void cambiarDisponibilidad(int fila, boolean disponible) {
-        this.modeloTabla.setValueAt(disponible, fila, 4);
+    public void cambiarDisponibilidad(int fila, int cantidad) {
+        this.modeloTabla.setValueAt(cantidad, fila, 4);
         this.guardarLibrosEnArchivo();
     }
 
@@ -110,11 +122,13 @@ public class TablaLibros extends JPanel {
             String tituloActual = this.modeloTabla.getValueAt(filaSeleccionada, 1).toString();
             String autorActual = this.modeloTabla.getValueAt(filaSeleccionada, 2).toString();
             String anioActual = this.modeloTabla.getValueAt(filaSeleccionada, 3).toString();
+            String disponibilidadActual = this.modeloTabla.getValueAt(filaSeleccionada, 4).toString();
 
             // Crear los campos con los datos actuales
             JTextField txtTitulo = new JTextField(tituloActual);
             JTextField txtAutor = new JTextField(autorActual);
             JTextField txtAnio = new JTextField(anioActual);
+            JTextField txtDisponibilidad = new JTextField(disponibilidadActual);
 
             dialogo.add(new JLabel("Título:"));
             dialogo.add(txtTitulo);
@@ -122,6 +136,9 @@ public class TablaLibros extends JPanel {
             dialogo.add(txtAutor);
             dialogo.add(new JLabel("Año:"));
             dialogo.add(txtAnio);
+            dialogo.add(new JLabel("Copias disponibles: "));
+            dialogo.add(txtDisponibilidad);
+
             txtAutor.addKeyListener(new KeyAdapter() {
                 public void keyTyped(KeyEvent e) {
                     char caracter = e.getKeyChar();
@@ -145,8 +162,19 @@ public class TablaLibros extends JPanel {
 
                 }
             });
+
+            txtDisponibilidad.addKeyListener(new KeyAdapter() {
+                public void keyTyped(KeyEvent e) {
+                    char caracter = e.getKeyChar();
+                    if (!Character.isDigit(caracter) && caracter != '\b') {
+                        e.consume();
+                    }
+                }
+            });
+
             JButton btnGuardar = new JButton("Guardar Cambios");
             JButton btnCancelar = new JButton("Cancelar");
+
             btnGuardar.addActionListener((e) -> {
                 String nuevoTitulo = txtTitulo.getText().trim();
                 String nuevoAutor = txtAutor.getText().trim();
@@ -160,7 +188,9 @@ public class TablaLibros extends JPanel {
                     dialogo.dispose();
                 }
             });
+
             btnCancelar.addActionListener((e) -> dialogo.dispose());
+
             dialogo.add(btnGuardar);
             dialogo.add(btnCancelar);
             dialogo.pack();
@@ -173,10 +203,12 @@ public class TablaLibros extends JPanel {
         JDialog dialogo = new JDialog((Frame)SwingUtilities.getWindowAncestor(this), "Agregar Nuevo Libro", true);
         dialogo.setLayout(new GridLayout(5, 2, 10, 10));
         ((JPanel)dialogo.getContentPane()).setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
         JTextField txtId = new JTextField();
         JTextField txtTitulo = new JTextField();
         JTextField txtAutor = new JTextField();
         JTextField txtAnio = new JTextField();
+
         dialogo.add(new JLabel("ID:"));
         dialogo.add(txtId);
         dialogo.add(new JLabel("Título:"));
@@ -185,6 +217,7 @@ public class TablaLibros extends JPanel {
         dialogo.add(txtAutor);
         dialogo.add(new JLabel("Año:"));
         dialogo.add(txtAnio);
+
         txtAutor.addKeyListener(new KeyAdapter() {
             public void keyTyped(KeyEvent e) {
                 char caracter = e.getKeyChar();
@@ -208,8 +241,10 @@ public class TablaLibros extends JPanel {
 
             }
         });
+
         JButton btnGuardar = new JButton("Guardar");
         JButton btnCerrar = new JButton("Cerrar");
+
         btnGuardar.addActionListener((e) -> {
             String idString = txtId.getText();
             String titulo = txtTitulo.getText();
@@ -221,7 +256,9 @@ public class TablaLibros extends JPanel {
                 dialogo.dispose();
             }
         });
+
         btnCerrar.addActionListener((e) -> dialogo.dispose());
+
         dialogo.add(btnGuardar);
         dialogo.add(btnCerrar);
         dialogo.pack();
@@ -260,40 +297,34 @@ public class TablaLibros extends JPanel {
         }
     }
 
-    private void cargarLibrosDesdeArchivo() {
-        List<String[]> libros = this.manejadorArchivos.cargarDatos("libros");
-        if (libros.isEmpty()) {
-            this.modeloTabla.addRow(new Object[]{"1", "Cien años de soledad", "Gabriel García Márquez", "1967", true});
-            this.modeloTabla.addRow(new Object[]{"2", "El principito", "Antoine de Saint-Exupéry", "1943", true});
-            this.modeloTabla.addRow(new Object[]{"3", "Don Quijote de la Mancha", "Miguel de Cervantes", "1605", true});
-            this.guardarLibrosEnArchivo();
-        } else {
-            for(String[] libro : libros) {
-                if (libro.length >= 5) {
-                    try {
-                        String id = libro[0];
-                        String titulo = libro[1];
-                        String autor = libro[2];
-                        String anio = libro[3];
-                        boolean disponible = Boolean.parseBoolean(libro[4]);
-                        this.modeloTabla.addRow(new Object[]{id, titulo, autor, anio, disponible});
-                    } catch (Exception e) {
-                        System.err.println("Error al cargar libro: " + e.getMessage());
-                    }
-                }
+    private void cargarLibrosDesdeDb() {
+        this.modeloTabla.setRowCount(0);
+
+        try {
+            Connection conn = DBConexion.GetConexion();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT ID_Libros, titulo, autor, anio_publicacion, disponibilidad FROM Libros");
+
+            while (rs.next()) {
+                int id = rs.getInt("ID_Libros");
+                String titulo = rs.getString("titulo");
+                String autor = rs.getString("autor");
+                int anio = rs.getInt("anio_publicacion");
+                int disponibilidad = rs.getInt("disponibilidad");
+
+                this.modeloTabla.addRow(new Object[]{id, titulo, autor, anio, disponibilidad});
             }
-        }
 
+            rs.close();
+            stmt.close();
+            conn.close();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Error al cargar libros desde la base de datos: " + ex.getMessage(),
+                    "Error de Conexion",
+                    JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
     }
 
-    private void guardarLibrosEnArchivo() {
-        List<String[]> libros = new ArrayList();
-
-        for(int i = 0; i < this.modeloTabla.getRowCount(); ++i) {
-            String[] libro = new String[]{this.modeloTabla.getValueAt(i, 0).toString(), this.modeloTabla.getValueAt(i, 1).toString(), this.modeloTabla.getValueAt(i, 2).toString(), this.modeloTabla.getValueAt(i, 3).toString(), this.modeloTabla.getValueAt(i, 4).toString()};
-            libros.add(libro);
-        }
-
-        this.manejadorArchivos.guardarDatos("libros", libros);
-    }
 }

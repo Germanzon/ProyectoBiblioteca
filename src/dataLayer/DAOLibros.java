@@ -16,7 +16,7 @@ public class DAOLibros extends DBConexion {
         ps.setString(1, reg.getTitulo());
         ps.setString(2, reg.getAutor());
         ps.setInt(3, reg.getAnio_pubicacion());
-        ps.setString(4, reg.getDisponibilidad());
+        ps.setInt(4, reg.getDisponibilidad());
         ps.executeUpdate();
         ps.close();
         con.close();
@@ -31,7 +31,7 @@ public class DAOLibros extends DBConexion {
         ps.setString(1, reg.getTitulo());
         ps.setString(2, reg.getAutor());
         ps.setInt(3, reg.getAnio_pubicacion());
-        ps.setString(4, reg.getDisponibilidad());
+        ps.setInt(4, reg.getDisponibilidad());
         ps.setInt(5, reg.getId_Libro());
         ps.executeUpdate();
         ps.close();

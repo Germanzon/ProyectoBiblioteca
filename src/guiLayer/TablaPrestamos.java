@@ -27,7 +27,6 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
 import dataLayer.*;
-import utilerias.ManejadorArchivos;
 
 public class TablaPrestamos extends JPanel {
     private TablaLibros tablaLibros;
@@ -156,8 +155,8 @@ public class TablaPrestamos extends JPanel {
         DefaultTableModel modeloLibros = this.tablaLibros.getModeloTabla();
 
         for(int i = 0; i < modeloLibros.getRowCount(); ++i) {
-            Boolean disponible = (Boolean)modeloLibros.getValueAt(i, 4);
-            if (disponible) {
+            int disponibilidad = (Integer)modeloLibros.getValueAt(i, 4);
+            if (disponibilidad > 0) {
                 String titulo = (String)modeloLibros.getValueAt(i, 1);
                 comboBoxLibros.addItem(titulo);
             }
@@ -182,22 +181,26 @@ public class TablaPrestamos extends JPanel {
         String libroSeleccionado = (String)comboBoxLibros.getSelectedItem();
 
         this.InsercionDatos(usuarioSeleccionado, libroSeleccionado );
-        this.libroNoDisponible(libroSeleccionado);
+        this.actualizarDisponibilidad(libroSeleccionado, -1);
+
         JOptionPane.showMessageDialog(this, "Préstamo registrado exitosamente." + "\nUsuario: " + usuarioSeleccionado + "\nLibro: " + libroSeleccionado);
         dialogo.dispose();
     }
 
-    private void libroNoDisponible(String libroSeleccionado) {
+    //Este metodo es llamado al crear o devolver un préstamo, y el valor de modificación será 1 o -1 dependiendo la acción
+    private void actualizarDisponibilidad(String libroSeleccionado, int modificacion){
         DefaultTableModel modeloLibros = this.tablaLibros.getModeloTabla();
 
         for(int i = 0; i < modeloLibros.getRowCount(); ++i) {
             String tituloLibro = (String)modeloLibros.getValueAt(i, 1);
             if (tituloLibro.equals(libroSeleccionado)) {
-                this.tablaLibros.cambiarDisponibilidad(i, false);
+                int disponibilidadActual = (Integer)modeloLibros.getValueAt(i, 4);
+                int nuevaDisponibilidad = disponibilidadActual + modificacion;
+                if (nuevaDisponibilidad < 0) nuevaDisponibilidad = 0;
+                this.tablaLibros.cambiarDisponibilidad(i, nuevaDisponibilidad);
                 break;
             }
         }
-
     }
 
     private void dialogoDevolverPrestamo() {
@@ -224,29 +227,15 @@ public class TablaPrestamos extends JPanel {
 
                 int confirmacion = JOptionPane.showConfirmDialog(this, "¿Confirma la devolución del libro " + nombreLibro + " de parte del usuario " + nombreUsuario + " con un monto total de multa de $" + multa + ".00?", "Confirmar devolución", 0);
                 if (confirmacion == 0) {
-                    this.modeloTabla.setValueAt("Devuelto", filaSeleccionada, 5);
-                    this.ActualizarDatos(estado);
+                    this.ActualizarDatos();
+                    this.actualizarDisponibilidad(nombreLibro, 1);
                     JOptionPane.showMessageDialog(this, "El libro fue devuelto exitosamente y se encuentra disponible para nuevos préstamos");
-                    this.libroDisponible(nombreLibro);
                 } else {
                     JOptionPane.showMessageDialog(this, "Devolución cancelada");
                 }
 
             }
         }
-    }
-
-    private void libroDisponible(String libroSeleccionado) {
-        DefaultTableModel modeloLibros = this.tablaLibros.getModeloTabla();
-
-        for(int i = 0; i < modeloLibros.getRowCount(); ++i) {
-            String tituloLibro = (String)modeloLibros.getValueAt(i, 1);
-            if (tituloLibro.equals(libroSeleccionado)) {
-                this.tablaLibros.cambiarDisponibilidad(i, true);
-                break;
-            }
-        }
-
     }
 
     private void cargarPrestamosDesdeDb() {
@@ -308,7 +297,7 @@ public class TablaPrestamos extends JPanel {
         }
     }
 
-    public void ActualizarDatos (String estado){
+    public void ActualizarDatos (){
         try {
             int filaSeleccionada = this.tablaPrestamos.getSelectedRow();
             if (filaSeleccionada != -1) {
