@@ -2,6 +2,7 @@ package dataLayer;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 public class DAOUsuarios extends DBConexion{
 
@@ -44,5 +45,28 @@ public class DAOUsuarios extends DBConexion{
         ps.executeUpdate();
         ps.close();
         con.close();
+    }
+
+    //Metodo auxiliar Buscar Usuario por Nombre
+    public static Usuarios BuscarUsuarioPorNombre(String nombre, String apellido) throws Exception {
+        Connection con = GetConexion();
+        String select = "SELECT ID_Usuario FROM Usuarios WHERE nombre = ? AND apellido = ?";
+        PreparedStatement ps = con.prepareStatement(select);
+        ps.setString(1, nombre);
+        ps.setString(2, apellido);
+        ResultSet rs = ps.executeQuery();
+
+        Usuarios usuario = null;
+        if (rs.next()) {
+            usuario = new Usuarios();
+            usuario.setId_Usuario(rs.getInt("ID_Usuario"));
+            usuario.setNombre(nombre);
+            usuario.setApellido(apellido);
+        }
+
+        rs.close();
+        ps.close();
+        con.close();
+        return usuario;
     }
 }

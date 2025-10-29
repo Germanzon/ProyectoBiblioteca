@@ -2,6 +2,7 @@ package dataLayer;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 public class DAOLibros extends DBConexion {
 
@@ -21,7 +22,7 @@ public class DAOLibros extends DBConexion {
         con.close();
     }
 
-    //Actualizar un usuario
+    //Actualizar un libro
     public static void Actualizar(Libros reg) throws Exception {
         Connection con = GetConexion();
         String Select = "UPDATE Libros SET Titulo = ?, Autor = ?," +
@@ -37,7 +38,7 @@ public class DAOLibros extends DBConexion {
         con.close();
     }
 
-    //Eliminar usuarios
+    //Eliminar libros
     public static void Eliminar(int id_Libro) throws Exception {
         Connection con = GetConexion();
         String select = "DELETE FROM Libros WHERE ID_Libros = ?";
@@ -46,5 +47,26 @@ public class DAOLibros extends DBConexion {
         ps.executeUpdate();
         ps.close();
         con.close();
+    }
+
+    //Metodo auxiliar Buscar libro por título
+    public static Libros BuscarLibroPorTitulo(String titulo) throws Exception {
+        Connection con = GetConexion();
+        String select = "SELECT ID_Libros FROM Libros WHERE titulo = ?";
+        PreparedStatement ps = con.prepareStatement(select);
+        ps.setString(1, titulo);
+        ResultSet rs = ps.executeQuery();
+
+        Libros libro = null;
+        if (rs.next()) {
+            libro = new Libros();
+            libro.setId_Libro(rs.getInt("ID_Libros"));
+            libro.setTitulo(titulo);
+        }
+
+        rs.close();
+        ps.close();
+        con.close();
+        return libro;
     }
 }

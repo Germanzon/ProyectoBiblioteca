@@ -17,7 +17,7 @@ public class DAOPrestamos extends DBConexion{
         con.close();
     }
 
-    //Actualizar Prestamos
+    //Actualizar Prestamos (Devoluciones)
     public static void Devolver(Prestamos reg) throws Exception {
         Connection con = GetConexion();
         String Select = "UPDATE Prestamos SET estado = 'Devuelto' WHERE ID_Prestamo = ? ";

@@ -35,7 +35,6 @@ public class TablaPrestamos extends JPanel {
 
     DefaultTableModel modeloTabla;
     JTable tablaPrestamos;
-    private ManejadorArchivos manejadorArchivos;
 
     JComboBox<String> comboBoxUsuarios = new JComboBox();
     JComboBox<String> comboBoxLibros = new JComboBox();
@@ -63,7 +62,7 @@ public class TablaPrestamos extends JPanel {
 
         this.tablaPrestamos = new JTable(this.modeloTabla);
         JScrollPane scrollPane = new JScrollPane(this.tablaPrestamos);
-        scrollPane.setPreferredSize(new Dimension(800, 400));
+        scrollPane.setPreferredSize(new Dimension(900, 400));
         panelTabla.add(scrollPane);
 
         //Se cargan los datos de la tabla
@@ -184,7 +183,7 @@ public class TablaPrestamos extends JPanel {
 
         this.InsercionDatos(usuarioSeleccionado, libroSeleccionado );
         this.libroNoDisponible(libroSeleccionado);
-        JOptionPane.showMessageDialog(this, "Préstamo: " + idPrestamo + "\nUsuario: " + usuarioSeleccionado + "\nLibro: " + libroSeleccionado + "\nFecha Devolución: " + fechaDevolucion.format(formato) + "\nRegistrado exitosamente.");
+        JOptionPane.showMessageDialog(this, "Préstamo registrado exitosamente." + "\nUsuario: " + usuarioSeleccionado + "\nLibro: " + libroSeleccionado);
         dialogo.dispose();
     }
 
@@ -213,7 +212,8 @@ public class TablaPrestamos extends JPanel {
                 String nombreUsuario = (String)this.modeloTabla.getValueAt(filaSeleccionada, 1);
                 String nombreLibro = (String)this.modeloTabla.getValueAt(filaSeleccionada, 2);
                 String fechaDevoluciontxt = (String)this.modeloTabla.getValueAt(filaSeleccionada, 4);
-                DateTimeFormatter formato = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+                DateTimeFormatter formato = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                 LocalDate fechaDevolucionSeleccionada = LocalDate.parse(fechaDevoluciontxt, formato);
                 LocalDate fechaActual = LocalDate.now();
                 long diasDiferencia = ChronoUnit.DAYS.between(fechaDevolucionSeleccionada, fechaActual);
@@ -256,7 +256,7 @@ public class TablaPrestamos extends JPanel {
             Connection conn = DBConexion.GetConexion();
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery("Select p.ID_Prestamo, u.Nombre as Usuario, l.titulo as Titulo, p.Fecha_Prestamo, p.Fecha_Devolucion,p.Estado FROM Prestamos p\n" +
-                    "join Usuarios u on p.ID_Usuario = u.ID_Usuario\n" +
+                    "join Usuarios u on p.ID_Usuario = u.ID_Usuario " +
                     "join Libros l on p.ID_Libro = l.ID_Libros");
 
             // Cargar los datos en la tabla
@@ -264,8 +264,8 @@ public class TablaPrestamos extends JPanel {
                 int id_Prestamo = rs.getInt("ID_Prestamo");
                 String nombre = rs.getString("Usuario");
                 String titulo = rs.getString("Titulo");
-                String fechaPrestamo = rs.getString("Fecha Prestamo");
-                String fechaDevolucion = rs.getString("Fecha Devolucion");
+                String fechaPrestamo = rs.getString("Fecha_Prestamo");
+                String fechaDevolucion = rs.getString("Fecha_Devolucion");
                 String estado = rs.getString("Estado");
 
                 this.modeloTabla.addRow(new Object[]{id_Prestamo, nombre, titulo, fechaPrestamo, fechaDevolucion, estado});
@@ -284,23 +284,19 @@ public class TablaPrestamos extends JPanel {
         }
     }
 
-    public void InsercionDatos (int idPrestamo, String nombre, String titulo, String fechaPrestamo, String fechaDevolucion, String estado){
+    public void InsercionDatos (String nombreCompleto, String titulo){
         try {
-            //Crear objetos de las clases
-            Usuarios usuario = new Usuarios();
-            Libros libro  = new Libros();
-            Prestamos prestamo = new Prestamos();
+            //Separar nombre y apellido
+            String[] partes = nombreCompleto.split(" ", 2);
+            String nombre = partes[0];
+            String apellido = partes[1];
 
-            prestamo.setId_Prestamo(idPrestamo);
-            usuario.setNombre(nombre);
-            libro.setTitulo(titulo);
-            prestamo.setFechaPrestamo(fechaPrestamo);
-            prestamo.setFechaDevolucion(fechaDevolucion);
-            prestamo.setEstado(estado);
+            // Usar métodos DAO de Usuarios y Libros para obtener los objetos
+            Usuarios usuario = DAOUsuarios.BuscarUsuarioPorNombre(nombre, apellido);
+            Libros libro = DAOLibros.BuscarLibroPorTitulo(titulo);
 
             // Insertar los datos en la base de datos
             DAOPrestamos.Insertar(usuario, libro);
-
             this.cargarPrestamosDesdeDb();
 
         } catch (Exception ex) {
@@ -314,15 +310,20 @@ public class TablaPrestamos extends JPanel {
 
     public void ActualizarDatos (String estado){
         try {
-            //Crear objetos de las clases
-            Prestamos prestamo = new Prestamos();
+            int filaSeleccionada = this.tablaPrestamos.getSelectedRow();
+            if (filaSeleccionada != -1) {
+                // Obtener el ID del préstamo de la fila seleccionada
+                int idPrestamo = (int) this.modeloTabla.getValueAt(filaSeleccionada, 0);
 
-            prestamo.setEstado(estado);
+                //Crear objeto Prestamos
+                Prestamos prestamo = new Prestamos();
+                prestamo.setId_Prestamo(idPrestamo);
+                prestamo.setEstado("Devuelto");
 
-            // Insertar los datos en la base de datos
-            DAOPrestamos.Devolver(prestamo);
-
-            this.cargarPrestamosDesdeDb();
+                //Actualizar la base de datos
+                DAOPrestamos.Devolver(prestamo);
+                this.cargarPrestamosDesdeDb();
+            }
 
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this,
@@ -332,4 +333,6 @@ public class TablaPrestamos extends JPanel {
             ex.printStackTrace();
         }
     }
+
+
 }

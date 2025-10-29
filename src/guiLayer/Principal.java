@@ -4,6 +4,7 @@ import guiLayer.TablaLibros;
 import guiLayer.TablaPrestamos;
 import guiLayer.TablaUsuarios;
 import utilerias.JPanelFondo;
+import utilerias.JlblReloj;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,7 +19,9 @@ public class Principal extends JFrame {
     private JPanelFondo jpPrincipal;
     private JPanel jpSecundario;
     CardLayout cardLayout = new CardLayout();
+
     private JLabel lblHora;
+    private JLabel lblFecha;
 
     private TablaLibros jpTablaLibros;
     private TablaUsuarios jpTablaUsuarios;
@@ -67,38 +70,6 @@ public class Principal extends JFrame {
         jpTarjetas.add(jpPrestamos, "Préstamos");
 
         jpSecundario.add(jpTarjetas, BorderLayout.CENTER);
-
-        //Comenzar el timer para actualizar la hora cuando pasen los 60 segundos
-        empezarTimerHora();
-    }
-
-    private void empezarTimerHora(){
-        //Temporizador que se ejecuta cada 1000 milisegundos --> 1 segundo
-        Timer tiempo = new Timer(1000, new ActionListener() {
-            //Inicializamos variable que almacene el minuto anterior con un valor de -1
-            //No se le da un valor de 0 o default en caso de que ejecutemos el programa en una hora con minuto cero (ej. 10:00)
-            private int minutoAnterior = -1;
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                LocalDateTime ahora = LocalDateTime.now();
-                int minutoActual = ahora.getMinute();       //Minuto actual
-
-                //Si los minutos no coinciden significará que el minuto actual ha cambiado
-                if (minutoActual != minutoAnterior) {
-                    ActualizaHora();
-                    minutoAnterior = minutoActual;  //Ambas variables tendrán el mismo valor hasta que el minuto actual cambie
-                }
-            }
-        });
-        tiempo.start();
-    }
-
-    private void ActualizaHora() {
-        LocalDateTime hora = LocalDateTime.now();
-        DateTimeFormatter formatohora = DateTimeFormatter.ofPattern("hh:mm a");
-        String horaActual = hora.format(formatohora);
-        lblHora.setText(horaActual);
     }
 
     private void BarraNavegacion(JPanel jpTarjetas){
@@ -184,28 +155,25 @@ public class Principal extends JFrame {
         jlIconoscb.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         //Fecha actual
-        LocalDateTime fecha = LocalDateTime.now();
-        DateTimeFormatter formatofecha = DateTimeFormatter.ofPattern("EEEE d 'de' MMMM 'de' yyyy",
-                new Locale("es", "MX"));
-        String fechaHoy = fecha.format(formatofecha);
-        JLabel lblFecha = personalizarEtiquetas(fechaHoy);
-        lblFecha.setFont(new Font("Garamond", Font.PLAIN, 16));
+        lblFecha = new JlblReloj(4);
+        lblFecha.setAlignmentX(Component.CENTER_ALIGNMENT);
+        lblFecha.setForeground(Color.BLACK);
+        lblFecha.setFont(new Font("Garamond", Font.PLAIN, 18));
 
         //Hora actual
-        LocalDateTime hora = LocalDateTime.now();
-        DateTimeFormatter formatohora = DateTimeFormatter.ofPattern("hh:mm a");
-        String horaActual = hora.format(formatohora);
-        lblHora = personalizarEtiquetas(horaActual);
-        lblHora.setFont(new Font("Garamond", Font.PLAIN, 16));
+        lblHora = new JlblReloj(2);
+        lblHora.setAlignmentX(Component.CENTER_ALIGNMENT);
+        lblHora.setForeground(Color.BLACK);
+        lblHora.setFont(new Font("Garamond", Font.PLAIN, 18));
 
         jpInicio.add(Box.createVerticalStrut(50));
         jpInicio.add(lblTitulo1);
         jpInicio.add(lblTitulo2);
         jpInicio.add(Box.createVerticalStrut(40));
         jpInicio.add(jlIconoscb);
-        jpInicio.add(Box.createVerticalStrut(40));
+        jpInicio.add(Box.createVerticalStrut(60));
         jpInicio.add(lblFecha);
-        jpInicio.add(Box.createVerticalStrut(10));
+        jpInicio.add(Box.createVerticalStrut(20));
         jpInicio.add(lblHora);
     }
 
